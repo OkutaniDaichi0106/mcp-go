@@ -7,6 +7,15 @@ type SampleDefinition struct {
 	StopReason string  `json:"stopReason"`
 }
 
+func (sd *SampleDefinition) Clone() *SampleDefinition {
+	return &SampleDefinition{
+		Role:       sd.Role,
+		Content:    sd.Content,
+		Model:      sd.Model,
+		StopReason: sd.StopReason,
+	}
+}
+
 type ModelPreferences struct {
 	Hints []struct {
 		Name string `json:"name"`

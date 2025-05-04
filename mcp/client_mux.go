@@ -11,11 +11,31 @@ func NewClientMux() *ClientMux {
 	}
 }
 
+func HandleSample(sample *SampleDefinition, handler SampleHandler) {
+	defaultClientMux.HandleSample(sample, handler)
+}
+
+func HandleSampleFunc(sample *SampleDefinition, handler SampleHandlerFunc) {
+	defaultClientMux.HandleSample(sample, handler)
+}
+
+func HandleRoot(root *RootDefinition) {
+	defaultClientMux.HandleRoot(root)
+}
+
 var _ ClientHandler = (*ClientMux)(nil)
 
 type ClientMux struct {
 	rootMux   *rootMux
 	sampleMux *sampleMux
+}
+
+func (m *ClientMux) HandleSample(sample *SampleDefinition, handler SampleHandler) {
+	m.sampleMux.registerSampleHandler(sample.Clone(), handler)
+}
+
+func (m *ClientMux) HandleRoot(root *RootDefinition) {
+	m.rootMux.registerRoot(root.Clone())
 }
 
 // SampleHandler implementation

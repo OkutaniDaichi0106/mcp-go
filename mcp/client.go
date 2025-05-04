@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"io"
 	"os/exec"
 
 	"golang.org/x/exp/slog"
@@ -67,11 +66,7 @@ func (c *Client) DialStdio(command string, args ...string) (ClientSession, error
 		}
 	}()
 
-	return c.DialStream(stdin, stdout)
-}
-
-func (c *Client) DialStream(w io.WriteCloser, r io.ReadCloser) (ClientSession, error) {
-	return c.Dial(NewStreamTransport(w, r))
+	return c.Dial(NewStreamTransport(stdin, stdout))
 }
 
 func (c *Client) DialHTTP(url string, config *HTTPConfig) (ClientSession, error) {

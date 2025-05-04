@@ -10,6 +10,13 @@ type RootDefinition struct {
 	Name string `json:"name"`
 }
 
+func (rd *RootDefinition) Clone() *RootDefinition {
+	return &RootDefinition{
+		URI:  rd.URI,
+		Name: rd.Name,
+	}
+}
+
 // type RootHandler interface {
 // 	ServeRoot(w RootWriter)
 // }
