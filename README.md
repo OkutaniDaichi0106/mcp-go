@@ -4,160 +4,155 @@
 MCP (Model Context Protocol) is a lightweight, flexible protocol designed for efficient communication between AI models and applications. It provides a standardized way for services to exchange messages, tools, and resources while maintaining high performance and reliability.
 
 ## About this Package
-MCP-Go is a Go implementation of the Model Context Protocol that offers:
+MCP-Go is a Go implementation of the Model Context Protocol that provides a robust framework for AI communication:
 
-- **High Performance**: Optimized for speed and efficiency with minimal overhead
-- **Type Safety**: Leverages Go's strong typing system
-- **Concurrent Processing**: Built with Go's concurrency model in mind
-- **Platform Independence**: Works across different operating systems and environments
-- **Simple API**: Easy to understand and implement in your applications
-- **Extensible**: Design your own tools and handlers
-- **Multiple Transport Options**: Support for WebSockets, HTTP, and standard I/O
+- **Client-Server Architecture**: Complete implementation of both client and server components
+- **Transport Flexibility**: Seamlessly communicate via Standard I/O, WebSockets, or HTTP
+- **Concurrent Design**: Built from the ground up with Go's goroutines and channels
+- **Type-Safe APIs**: Strong typing throughout the codebase to prevent runtime errors
+- **Modular Components**: Handler-based design pattern for extensibility and maintainability
+- **Session Management**: Persistent connections with proper lifecycle handling
 
-## Implementation Examples
+## Usage
 
-### Standard I/O Server
+### Common Pattern
+
+All MCP-Go implementations follow a similar pattern:
+
 ```go
 package main
 
 import (
-	"encoding/json"
-	"log/slog"
-
-	"github.com/OkutaniDaichi0106/mcp-go/mcp"
+    "github.com/OkutaniDaichi0106/mcp-go/mcp"
 )
 
 func main() {
-	server := mcp.NewServer("stdio")
+    server := mcp.NewServer()
 
-	// Define a tool
-	tool := &mcp.ToolDefinition{
-		Name:        "get_weather",
-		Description: "Get current weather information for a location",
-		InputSchema: mcp.InputSchema(`
-			{
-		  		"type": "object",
-          		"properties": {
-            		"location": {
-              			"type": "string",
-              			"description": "City name or zip code"
-            		},
-          	    },
-          		"required": ["location"]
-		  	}
-		`),
-	}
+    // Tool registration
+    mcp.HandleToolFunc(&mcp.ToolDefinition{
+        Name:        "tool_name",
+        Description: "Tool description",
+        InputSchema: mcp.InputSchema(`{ "type": "object", ... }`),
+    }, func(w mcp.ContentsWriter, name string, args map[string]any) {
+        // Tool implementation
+        // ...
+        w.WriteContents(contents)
+    })
 
-	// Handle tool calls
-	mcp.HandleToolFunc(tool, func(w mcp.ContentsWriter, name string, args map[string]any) {
-		temperature := "72"
-		conditions := "Partly cloudy"
-		contents := mcp.NewContents(json.RawMessage(`
-			{
-				"type": "text",
-				"content": "Current weather in New York:\nTemperature: ` + temperature + `°F\nConditions: ` + conditions + `"
-			}
-		`))
+    // Resource registration
+    mcp.HandleResourceFunc(&mcp.ResourceDefinition{
+        URI:         "resource_uri",
+        MimeType:    "resource_mime_type",
+        Name:        "resource_name",
+        Description: "Resource description",
+    }, func(w mcp.ContentsWriter, uri string) {
+        // Resource implementation
+        // ...
+        w.WriteContents(contents)
+    })
 
-		err := w.WriteContents(contents)
-		if err != nil {
-			slog.Error("failed to write contents", "error", err)
-		}
-	})
+    mcp.HandlePromptFunc(&mcp.PromptDefinition{
+        Name:        "prompt_name",
+        Description: "Prompt description",
+        InputSchema: mcp.InputSchema(`{ "type": "object", ... }`),
+    }, func(w mcp.PromptWriter, name string, args map[string]any) {
+        // Prompt implementation
+        // ...
+        w.WriteContents(contents)
+    })
 
-	// Accept connection from standard I/O
-	sess, err := server.AcceptStdio()
-	if err != nil {
-		return
-	}
-	defer sess.Close()
+    transport, err := ... // Create transport
+
+    // Configure transport and accept -> get session
+    session, err := server.Accept(transport)
+    defer session.Close()
+
+    // ...
+}
+```
+```go
+package main
+
+import (
+    "github.com/OkutaniDaichi0106/mcp-go/mcp"
+)
+
+func main() {
+    // Sample registration
+    mcp.HandleSampleFunc(&mcp.SampleDefinition{
+        Name:        "sample_name",
+        Description: "Sample description",
+    }, func(w mcp.ContentsWriter, name string, args map[string]any) {
+        // Sample implementation
+        // ...
+        w.WriteContents(contents)
+    })
+
+    // Root registration
+    mcp.HandleRoot(&mcp.RootDefinition{
+        URI:  "root_uri",
+        Name: "Root name",
+    })
+
+    // Create client
+    client := mcp.NewClient()
+
+    transport, err := ... // Create transport
+
+    // Configure transport and dial -> get session
+    session, err := client.Dial(transport)
+    defer session.Close()
+
+    // ...
 }
 ```
 
-### Standard I/O Client
+### Transport Options
+
+MCP-Go supports multiple transport methods with minimal code changes:
+
+**Custom Transports**
+
+For custom transports, use the `Accept` and `Dial` methods with the appropriate transport object.
+
 ```go
-package main
-
-import (
-	"github.com/OkutaniDaichi0106/mcp-go/mcp"
-)
-
-func main() {
-	client := mcp.NewClient()
-	defer client.Close()
-
-	// Connect to server using standard I/O
-	sess, err := client.DialStdio("go", "run", "./server/main.go")
-	if err != nil {
-		return
-	}
-	defer sess.Close()
-
-	// Now you can call tools, read resources, etc.
-}
+// Server
+sess, err := server.Accept(t)
 ```
 
-### WebSocket Server
 ```go
-package main
+// Client
+sess, err := client.Dial(t)
+```
+**Standard I/O**
 
-import (
-	"log"
-	"log/slog"
-	"net/http"
+For Standard I/O, use the `AcceptStdio` and `DialStdio` methods.
 
-	"github.com/OkutaniDaichi0106/mcp-go/mcp"
-	"golang.org/x/net/websocket"
-)
-
-func main() {
-	// Create a server
-	server := mcp.NewServer("websocket-server")
-
-	// Configure websocket handler
-	http.Handle("/mcp", websocket.Handler(func(c *websocket.Conn) {
-		defer c.Close()
-
-		// Create a WebSocket transport
-		transport := mcp.NewStreamTransport(c, c)
-
-		// Accept the connection
-		session, err := server.Accept(transport)
-		if err != nil {
-			slog.Error("Failed to accept connection", "error", err)
-			return
-		}
-
-		defer session.Close()
-	}))
-
-	log.Fatal(http.ListenAndServe(":8080", nil))
-}
+```go
+// Server
+sess, err := server.AcceptStdio()
 ```
 
-### HTTP Server
 ```go
-package main
+// Client
+sess, err := client.DialStdio("command", "arg1", "arg2")
+```
 
-import (
-	"net/http"
+**HTTP**
 
-	"github.com/OkutaniDaichi0106/mcp-go/mcp"
-)
+With HTTP, you can use the `AcceptHTTP` and `DialHTTP` methods.
 
-func main() {
-	server := mcp.NewServer("http-server")
+```go
+// Server
+http.HandleFunc("/mcp", func(w http.ResponseWriter, r *http.Request) {
+    sess, err := server.AcceptHTTP(w, r)
+})
+```
 
-	http.HandleFunc("/mcp", func(w http.ResponseWriter, r *http.Request) {
-		sess, err := server.AcceptHTTP(w, r)
-		if err != nil {
-			return
-		}
-		defer sess.Close()
-	})
-
-	http.ListenAndServe(":8080", nil)
-}
+```go
+// Client
+sess, err := client.DialHTTP("http://localhost:8080/mcp", nil)
 ```
 
 ## Installation
