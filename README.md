@@ -52,6 +52,7 @@ func main() {
         w.WriteContents(contents)
     })
 
+    // Prompt registration
     mcp.HandlePromptFunc(&mcp.PromptDefinition{
         Name:        "prompt_name",
         Description: "Prompt description",
@@ -154,6 +155,10 @@ http.HandleFunc("/mcp", func(w http.ResponseWriter, r *http.Request) {
 // Client
 sess, err := client.DialHTTP("http://localhost:8080/mcp", nil)
 ```
+
+## Specification Compliance
+
+MCP-Go implements the [Model Context Protocol specification v2025-03-26](https://modelcontextprotocol.io/specification/2025-03-26), which is the latest version of the protocol as of this release.
 
 ## Installation
 
