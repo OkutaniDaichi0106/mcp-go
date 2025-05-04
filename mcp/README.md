@@ -1,4 +1,4 @@
-## ✅ MCP-Go Implementation Status (v2025-03-26)
+## Implementation Status (v2025-03-26)
 
 | Section                               | Implemented        | Tested |
 |---------------------------------------|--------------------|--------|
@@ -35,7 +35,7 @@
 | 4.3.1. Listing Prompts                | :white_check_mark: | :x:    |
 | 4.3.2. Getting Prompts                | :white_check_mark: | :x:    |
 | 4.3.3. Prompt Changed Notifications   | :white_check_mark: | :x:    |
-| 4.4. Completion                       | :white_check_mark: | :x:    |
+| 4.4. Completion                       | :x:                | :x:    |
 | 4.5. Logging                          | :construction:     | :x:    |
 | 4.5.1. Setting Log Level              | :construction:     | :x:    |
 | 4.6. Pagination                       | :x:                | :x:    |
