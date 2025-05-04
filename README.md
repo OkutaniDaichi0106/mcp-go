@@ -1,2 +1,4 @@
 # mcp-go
-A library for establishing MCP server.
+A library for MCP.
+
+# Packages
