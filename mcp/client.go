@@ -5,13 +5,17 @@ import (
 	"encoding/json"
 	"errors"
 	"os/exec"
+	"sync"
 
 	"golang.org/x/exp/slog"
 )
 
 type Client struct {
-	Name    string
-	Version Version
+	// Name is the name of your application
+	Name string
+
+	// Version is the client version of your application
+	Version string
 
 	AdditionalClientInfo   map[string]any
 	AdditionalCapabilities Capabilities
@@ -25,11 +29,27 @@ type Client struct {
 
 	closed bool
 	// closedErr error
+
+	initOnce    sync.Once
+	initialized bool
 }
 
-func NewClient() *Client {
-	c := &Client{}
+func NewClient(name, version string) *Client {
+	c := &Client{
+		Name:    name,
+		Version: version,
+	}
+	c.init()
 	return c
+}
+
+func (c *Client) init() {
+	c.initOnce.Do(func() {
+		c.sessionIDs = make(map[string]int)
+		c.sessions = make([]*clientSession, 0)
+		c.initialized = true
+	})
+
 }
 
 func (c *Client) Dial(t Transport) (ClientSession, error) {

@@ -14,7 +14,7 @@ import (
 
 type Server struct {
 	Name                 string
-	Version              Version
+	Version              string
 	AdditionalServerInfo map[string]any
 
 	// Capabilities related to resources
@@ -46,24 +46,31 @@ type Server struct {
 	sessions map[string]*serverSession
 }
 
-func NewServer(name string) *Server {
+func NewServer(name, version string) *Server {
 	s := &Server{
-		Name: name,
+		Name:    name,
+		Version: version,
 	}
+
 	s.init()
+
 	return s
 }
 
 func (s *Server) init() {
 	s.initOnce.Do(func() {
-		if s.Logger == nil {
-			s.Logger = slog.Default()
-		}
+		s.sessions = make(map[string]*serverSession)
+		s.cancelFuncs = make([]context.CancelFunc, 0)
+
 		s.initialized = true
 	})
 }
 
 func (s *Server) AcceptStdio() (ServerSession, error) {
+	if !s.initialized {
+		s.init()
+	}
+
 	signalCh := make(chan os.Signal, 1)
 	signal.Notify(signalCh, os.Interrupt)
 	defer signal.Stop(signalCh)
@@ -79,12 +86,20 @@ func (s *Server) AcceptStdio() (ServerSession, error) {
 }
 
 func (s *Server) AcceptStream(w io.WriteCloser, r io.ReadCloser) (ServerSession, error) {
+	if !s.initialized {
+		s.init()
+	}
+
 	t := NewStreamTransport(w, r)
 
 	return s.Accept(t)
 }
 
 func (s *Server) AcceptHTTP(w http.ResponseWriter, r *http.Request) (ServerSession, error) {
+	if !s.initialized {
+		s.init()
+	}
+
 	if r.Method == http.MethodPost {
 		body := r.Body
 
@@ -225,6 +240,10 @@ func (s *Server) accept(t Transport) (*serverSession, error) {
 }
 
 func (s *Server) Accept(t Transport) (ServerSession, error) {
+	if !s.initialized {
+		s.init()
+	}
+
 	return s.accept(t)
 }
 
