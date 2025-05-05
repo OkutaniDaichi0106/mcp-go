@@ -46,7 +46,7 @@
 | 5.2. Sampling                         | :white_check_mark: | :x:    |
 | 5.2.1. Creating Sample Messages       | :white_check_mark: | :x:    |
 
-## 🧩 TODOs
+## TODOs
 
 - Add unit and integration tests for all existing components.
 - Improve error handling in the transport layer (e.g., detect disconnects, auto-reconnect).
