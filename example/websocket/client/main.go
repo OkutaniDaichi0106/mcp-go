@@ -19,7 +19,7 @@ func main() {
 	transport := mcp.NewStreamTransport(conn, conn)
 
 	// Create client and dial using the transport
-	client := mcp.NewClient()
+	client := mcp.NewClient("websocket-client", "0.0.1")
 
 	session, err := client.Dial(transport)
 	if err != nil {

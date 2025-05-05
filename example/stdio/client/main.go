@@ -5,7 +5,8 @@ import (
 )
 
 func main() {
-	client := mcp.NewClient()
+	client := mcp.NewClient("stdio-client", "0.0.1")
+
 	defer client.Close()
 
 	sess, err := client.DialStdio("go", "run", "./server/main.go")

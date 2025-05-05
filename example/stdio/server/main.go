@@ -8,7 +8,7 @@ import (
 )
 
 func main() {
-	server := mcp.NewServer("stdio")
+	server := mcp.NewServer("stdio-server", "0.0.1")
 
 	//
 	tool := &mcp.ToolDefinition{

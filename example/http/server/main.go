@@ -7,7 +7,7 @@ import (
 )
 
 func main() {
-	server := mcp.NewServer("http-server")
+	server := mcp.NewServer("http-server", "0.0.1")
 
 	http.HandleFunc("/mcp", func(w http.ResponseWriter, r *http.Request) {
 		sess, err := server.AcceptHTTP(w, r)

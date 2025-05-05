@@ -11,7 +11,7 @@ import (
 
 func main() {
 	// Create a server
-	server := mcp.NewServer("websocket-server")
+	server := mcp.NewServer("websocket-server", "0.0.1")
 
 	// Configure websocket handler
 	http.Handle("/mcp", websocket.Handler(func(c *websocket.Conn) {
